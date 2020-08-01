@@ -6,7 +6,6 @@ interface IProps {
     activity: IActivity;
     setEditMode: (editMode: boolean) => void;
     setSelectedActivity: (selectedActivity: IActivity | null) => void;
-
 }
 
 export const ActivityDetails: React.FC<IProps> = ({ activity, setEditMode, setSelectedActivity }) => {
