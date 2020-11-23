@@ -5,8 +5,8 @@ import ActivityStore from '../../../app/stores/activityStore';
 import { IActivity } from '../../../app/models/activity';
 
 export const ActivityListItem: React.FC<{ activity: IActivity }> = ({ activity }) => {
-    const activityStore = useContext(ActivityStore);
-    const { selectActivity } = activityStore;
+    //const activityStore = useContext(ActivityStore);
+    //const { selectActivity } = activityStore;
     return (
         <Segment.Group>
             <Segment>
@@ -37,7 +37,7 @@ export const ActivityListItem: React.FC<{ activity: IActivity }> = ({ activity }
                 <span>{activity.description}</span>
                 <Button
                     as={Link} to={`/activities/${activity.id}`}
-                    onClick={() => selectActivity(activity.id)}
+                   // onClick={() => selectActivity(activity.id)}
                     floated='right'
                     content='View'
                     color='blue'

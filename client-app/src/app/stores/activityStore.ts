@@ -1,8 +1,12 @@
-import { observable, action, runInAction, computed } from 'mobx';
+import { observable, action, runInAction, configure, computed } from 'mobx';
 import { createContext, SyntheticEvent } from 'react';
 import { IActivity } from '../models/activity';
 import agent from '../api/agent';
 import 'mobx-react-lite/batchingForReactDom'
+import { history } from '../..';
+import { toast } from 'react-toastify';
+
+configure({enforceActions: 'always'});
 
 class ActivityStore {
     @observable activityRegistry = new Map();
@@ -47,25 +51,28 @@ class ActivityStore {
 
     @action loadActivity = async (id: string) => {
         let activity = this.getActivity(id);
-        if(activity){
-            this.activity = activity;
+        if (activity) {
+          this.activity = activity;
+          return activity;
         } else {
-            this.loadingInitial = true;
-            try {
-                activity = await agent.Activities.details(id);
-                runInAction('getting activity',() => {
-                    this.activity = activity;
-                    this.loadingInitial = false;
-                });
-            } catch(error) {
-                runInAction('get activity error', () => {
-                    this.loadingInitial = false;
-                });
-                console.log(error);
-            }
+          this.loadingInitial = true;
+          try {
+            activity = await agent.Activities.details(id);
+            runInAction('getting activity',() => {
+              //activity.date = new Date(activity.date);
+              this.activity = activity;
+              this.activityRegistry.set(activity.id, activity);
+              this.loadingInitial = false;
+            })
+            return activity;
+          } catch (error) {
+            runInAction('get activity error', () => {
+              this.loadingInitial = false;
+            })
+            console.log(error);
+          }
         }
-
-    }
+      }
     
     getActivity = (id: string) => {
         return this.activityRegistry.get(id);
@@ -78,34 +85,38 @@ class ActivityStore {
     @action createActivity = async (activity: IActivity) => {
         this.submitting = true;
         try {
-            await agent.Activities.create(activity);
-            runInAction('create activity', () => {
-                this.activityRegistry.set(activity.id, activity);
-                this.submitting = false;
-            })
+          await agent.Activities.create(activity);
+          runInAction('create activity', () => {
+              console.log('create activity ', activity.id);
+            this.activityRegistry.set(activity.id, activity);
+            this.submitting = false;
+          })
+          history.push(`/activities/${activity.id}`)
         } catch (error) {
-            runInAction('create activity error', () => {
-                this.submitting = false;
-            })
-            console.log(error);
+          runInAction('create activity error', () => {
+            this.submitting = false;
+          })
+          toast.error('Problem submitting data');
+          console.log(error.response);
         }
     };
 
     @action editActivity = async (activity: IActivity) => {
         this.submitting = true;
         try {
-            await agent.Activities.update(activity);
-            runInAction('editing activity', () => {
-                this.activityRegistry.set(activity.id, activity);
-                this.activity = activity;
-                this.submitting = false;
-            })
-
+        await agent.Activities.update(activity);
+        runInAction('editing activity', () => {
+            this.activityRegistry.set(activity.id, activity);
+            this.activity = activity;
+            this.submitting = false;
+        })
+        history.push(`/activities/${activity.id}`)
         } catch (error) {
-            runInAction('edit activity error', () => {
-                this.submitting = false;
-            })
-            console.log(error);
+        runInAction('edit activity error', () => {
+            this.submitting = false;
+        })
+        toast.error('Problem submitting data');
+        console.log(error);
         }
     };
 
